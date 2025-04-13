@@ -23,7 +23,10 @@ const Header: React.FC = () => {
         </nav>
         {token ? (
                  <>
-                    <li className="nav-right"><a href="/login" onClick={(e) => { e.preventDefault(); handleLogout(); }} className="btn btn-login">Logout</a></li>
+                    <li className="nav-right">
+                      <Link to="/createpost" className="btn btn-login">Create Post</Link> &nbsp;
+                      <a href="/login" onClick={(e) => { e.preventDefault(); handleLogout(); }} className="btn btn-login">Logout</a>
+                    </li>
                 </>
               ) : (
                 <>

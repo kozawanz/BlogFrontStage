@@ -1,10 +1,9 @@
 name: Deploy to BlogFrontStage
 
 on:
-  pull_request:
-    branches: [ main ]  # PRs targeting `main` branch
   push:
-    branches: [ main ]  # Direct pushes to `main` (after merge)
+    branches:
+      - main
 
 jobs:
   deploy:
