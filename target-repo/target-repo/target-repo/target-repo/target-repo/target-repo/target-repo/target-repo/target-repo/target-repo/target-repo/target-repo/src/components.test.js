@@ -295,5 +295,4 @@ describe("Login Component", () => {
       expect(screen.getByText("Invalid credentials")).toBeInTheDocument()
     })
   })
-
 })

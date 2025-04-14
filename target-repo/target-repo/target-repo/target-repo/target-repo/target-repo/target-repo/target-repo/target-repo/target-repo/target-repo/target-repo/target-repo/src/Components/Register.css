@@ -1,48 +1,5 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
 /* Container for the registration page */
-.form-container {
+.register-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -50,9 +7,9 @@
     min-height: calc(100vh - 70px); /* Adjust based on your header height */
     background-color: #f9f9f9;
   }
-
+  
   /* Card styling with shadow and border radius */
-  .form-card {
+  .register-card {
     background-color: white;
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -60,20 +17,20 @@
     width: 100%;
     max-width: 450px;
   }
-
+  
   /* Form header */
-  .form-card h1 {
+  .register-card h1 {
     text-align: center;
     margin-bottom: 1.5rem;
     color: #333;
     font-size: 1.8rem;
   }
-
+  
   /* Form group spacing */
   .form-group {
     margin-bottom: 1.5rem;
   }
-
+  
   /* Form labels */
   .form-group label {
     display: block;
@@ -81,7 +38,7 @@
     font-weight: 500;
     color: #555;
   }
-
+  
   /* Form inputs */
   .form-group input {
     width: 100%;
@@ -91,13 +48,13 @@
     font-size: 1rem;
     transition: border-color 0.3s;
   }
-
+  
   .form-group input:focus {
     outline: none;
     border-color: #0066cc;
     box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
   }
-
+  
   /* Submit button */
   .submit-btn {
     width: 100%;
@@ -112,24 +69,24 @@
     transition: background-color 0.3s;
     margin-top: 1rem;
   }
-
+  
   .submit-btn:hover {
     background-color: #0052a3;
   }
-
+  
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .register-card {
       padding: 1.5rem;
     }
   }
-
+  
   @media (max-width: 480px) {
     .register-card h1 {
       font-size: 1.5rem;
     }
-
-    .form-group input,
+    
+    .form-group input, 
     .submit-btn {
       padding: 0.6rem;
     }
