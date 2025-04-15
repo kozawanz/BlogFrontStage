@@ -1,0 +1,42 @@
+name: Deploy to BlogFrontStage
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code from the repository
+      - name: Checkout source repo
+        uses: actions/checkout@v3
+
+      # Set up Git for commit
+      - name: Set up Git identity
+        run: |
+          git config --global user.name "Kenji Ozawa"
+          git config --global user.email "keoz002@ess.ais.ac.nz"
+
+      # Install dependencies and build the app with Vite
+      - name: Install dependencies and build
+        run: |
+          npm install
+          npm run build
+
+      # Clone the target repository where the built files will be pushed
+      - name: Clone target repo
+        run: |
+          git clone https://x-access-token:${{ secrets.TARGET_REPO_PAT }}@github.com/kozawanz/BlogFrontStage.git target-repo
+
+      # Sync entire project (excluding .git) to target repo
+      - name: Sync entire project to target repo
+        run: |
+          rsync -av --exclude='.git' --exclude='node_modules' --delete ./ target-repo/ || true
+          cd target-repo
+          git add .
+          git commit -m "🚀 Auto-deploy full project to stage ($(date +'%Y-%m-%d %H:%M'))" || echo "No changes to commit"
+          git push origin main
+

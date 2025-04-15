@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event"
 import { Register } from "./Components/Register"
 import Login from "./Components/Login"
 import { BaseUrl } from "./constants"
+import ListPosts from "./Components/ListPosts";
 
 // Mock axios manually instead of importing it
 const mockAxios = {
@@ -295,5 +296,147 @@ describe("Login Component", () => {
       expect(screen.getByText("Invalid credentials")).toBeInTheDocument()
     })
   })
+
+  describe("ListPosts Component", () => {
+  // Mock localStorage
+  const localStorageMock = (() => {
+    let store = {}
+    return {
+      getItem: jest.fn((key) => store[key] || null),
+      setItem: jest.fn((key, value) => {
+        store[key] = value.toString()
+      }),
+      clear: jest.fn(() => {
+        store = {}
+      }),
+    }
+  })()
+
+  beforeEach(() => {
+    // Clear all mocks before each test
+    jest.clearAllMocks()
+
+    // Setup localStorage mock
+    Object.defineProperty(window, "localStorage", { value: localStorageMock })
+
+    // Mock console.log to avoid cluttering test output
+    jest.spyOn(console, "log").mockImplementation(() => {})
+  })
+
+  test("renders loading state initially", () => {
+    // Mock axios to delay response
+    mockAxios.request.mockImplementation(() => new Promise(() => {}))
+
+    render(<ListPosts />)
+
+    expect(screen.getByText("Loading posts...")).toBeInTheDocument()
+  })
+
+  test("renders posts when data is loaded", async () => {
+    // Mock successful response with sample posts
+    const mockPosts = {
+      data: {
+        results: [
+          {
+            id: 1,
+            title: "Test Post 1",
+            author: { first_name: "John", last_name: "Doe" },
+            created_at: "2023-04-01T12:00:00Z",
+            likes: 5,
+            dislikes: 2,
+          },
+          {
+            id: 2,
+            title: "Test Post 2",
+            author: { first_name: "Jane", last_name: "Smith" },
+            created_at: "2023-04-02T14:30:00Z",
+            likes: 10,
+            dislikes: 1,
+          },
+        ],
+      },
+    }
+
+    mockAxios.request.mockResolvedValueOnce(mockPosts)
+
+    render(<ListPosts />)
+
+    // Wait for posts to load
+    await waitFor(() => {
+      expect(screen.getByText("Test Post 1")).toBeInTheDocument()
+    })
+
+    expect(screen.getByText("Test Post 2")).toBeInTheDocument()
+    expect(screen.getByText("John Doe")).toBeInTheDocument()
+    expect(screen.getByText("Jane Smith")).toBeInTheDocument()
+  })
+
+  test("handles like button click when user is logged in", async () => {
+    // Set token in localStorage to simulate logged in user
+    localStorageMock.getItem.mockReturnValue("test-token")
+
+    // Mock initial posts response
+    const initialPosts = {
+      data: {
+        results: [
+          {
+            id: 1,
+            title: "Test Post",
+            author: { first_name: "John", last_name: "Doe" },
+            created_at: "2023-04-01T12:00:00Z",
+            likes: 5,
+            dislikes: 2,
+          },
+        ],
+      },
+    }
+
+    // Mock response after liking
+    const updatedPosts = {
+      data: {
+        results: [
+          {
+            id: 1,
+            title: "Test Post",
+            author: { first_name: "John", last_name: "Doe" },
+            created_at: "2023-04-01T12:00:00Z",
+            likes: 6,
+            dislikes: 2,
+            liked: true,
+          },
+        ],
+      },
+    }
+
+    mockAxios.request.mockResolvedValueOnce(initialPosts)
+    mockAxios.request.mockResolvedValueOnce(updatedPosts)
+
+    render(<ListPosts />)
+
+    // Wait for posts to load
+    await waitFor(() => {
+      expect(screen.getByText("Test Post")).toBeInTheDocument()
+    })
+
+  })
+
+  test("shows error message when API request fails", async () => {
+    // Mock error response
+    mockAxios.request.mockRejectedValueOnce({
+      response: {
+        data: {
+          error: "Failed to fetch posts",
+        },
+      },
+    })
+
+    render(<ListPosts />)
+
+    // Wait for error message to appear
+    await waitFor(() => {
+      expect(screen.getByText("Error: Failed to fetch posts")).toBeInTheDocument()
+    })
+  })
+})
 
 })
