@@ -7,8 +7,12 @@ import "./CreatePost.css";
 const CreatePost = () => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
-    const [status, setStatus] = useState('')
+    const [status, setStatus] = useState('');
+    const [Err, setErr] = useState('');
 
+    function handleStatusChange(event) {
+        setStatus(event.target.value);
+    }
 
     function handleSubmit(event) {
         event.preventDefault();
@@ -28,17 +32,17 @@ const CreatePost = () => {
             },
             data: data
         };
-alert(data);
+
         axios.request(config)
             .then((response) => {
                 console.log(JSON.stringify(response.data));
-                alert("Post created successfully");
+                setErr("✅ Post Created Successfully");
                 setTitle('');
                 setContent('');
             })
             .catch((error) => {
                 console.log(error);
-                alert(error.response.data.error);
+                setErr(error.response.data.error);
             });
     }
 
@@ -64,14 +68,17 @@ alert(data);
                     <div className="form-footer">
                         <select
                             value={status}
-                            onChange={(e) => setStatus(e.target.value)}
+                            onChange={handleStatusChange}
                         >
                             <option value="published">Published</option>
-                            <option value="private">Private</option>
+                            <option value="draft">Draft</option>
                         </select>
                         <button type="submit">Create Post</button>
+
                     </div>
+                    <p>{Err}</p>
                 </form>
+
             </div>
         </div>
 
