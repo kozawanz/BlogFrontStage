@@ -51,6 +51,7 @@ const Register: React.FC = () => {
           }
         }
       );
+      console.log(BaseUrl +'/api/register/');
       console.log(response.data);
       setErr('✅ Registration successful!');
     } catch (error) {
