@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event"
 import { Register } from "./Components/Register"
 import Login from "./Components/Login"
 import { BaseUrl } from "./constants"
-import ListPosts from "./components/ListPosts"
+import ListPosts from "./Components/ListPosts"
 import axios from "axios"
 
 // Mock axios manually instead of importing it

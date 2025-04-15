@@ -1,4 +1,4 @@
-name: Deploy to BlogFrontStage
+name: Deploy to BlogFrontStage - Stage/test Environment
 
 on:
   pull_request:
