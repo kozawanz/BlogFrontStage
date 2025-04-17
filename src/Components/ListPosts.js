@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import { BaseUrl } from "../constants"
 import "./ListPosts.css"
-import { ThumbsUp, ThumbsDown, Calendar, User, ChevronLeft, ChevronRight } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Calendar, User, ChevronLeft, ChevronRight, X } from "lucide-react"
 
 const ListPosts = () => {
   // Initialize posts as an empty array to prevent "slice is not a function" error
@@ -19,11 +19,15 @@ const ListPosts = () => {
   const [postsPerPage] = useState(6)
   const [totalPosts, setTotalPosts] = useState(0)
 
+  // Modal state
+  const [selectedPost, setSelectedPost] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
   // eslint-disable-next-line
   useEffect(() => {
     // eslint-disable-next-line
     fetchPosts(BaseUrl + "/api/posts/")
-     // eslint-disable-next-line
+    // eslint-disable-next-line
   }, [])
 
   // eslint-disable-next-line
@@ -89,29 +93,50 @@ const ListPosts = () => {
         if (response.data && response.data.id) {
           const updatedPost = response.data
           setPosts(posts.map((p) => (p.id === updatedPost.id ? updatedPost : p)))
+
+          // If the modal is open and showing this post, update it there too
+          if (isModalOpen && selectedPost && selectedPost.id === updatedPost.id) {
+            setSelectedPost(updatedPost)
+          }
         }
         // If the API returns all posts as an array
         else if (Array.isArray(response.data)) {
           setPosts(response.data)
+
+          // If the modal is open, find and update the selected post
+          if (isModalOpen && selectedPost) {
+            const updatedSelectedPost = response.data.find((p) => p.id === selectedPost.id)
+            if (updatedSelectedPost) {
+              setSelectedPost(updatedSelectedPost)
+            }
+          }
         }
         // Fallback to manual update
         else {
-          setPosts(
-            posts.map((p) => {
-              if (p.id === post.id) {
-                const wasLiked = p.user_has_liked
-                return {
-                  ...p,
-                  like_count: wasLiked ? p.like_count - 1 : p.like_count + 1,
-                  user_has_liked: !wasLiked,
-                  // If user is liking and had previously disliked, remove the dislike
-                  dislike_count: p.user_has_disliked ? p.dislike_count - 1 : p.dislike_count,
-                  user_has_disliked: p.user_has_disliked ? false : p.user_has_disliked,
-                }
+          const updatedPosts = posts.map((p) => {
+            if (p.id === post.id) {
+              const wasLiked = p.user_has_liked
+              return {
+                ...p,
+                like_count: wasLiked ? p.like_count - 1 : p.like_count + 1,
+                user_has_liked: !wasLiked,
+                // If user is liking and had previously disliked, remove the dislike
+                dislike_count: p.user_has_disliked ? p.dislike_count - 1 : p.dislike_count,
+                user_has_disliked: p.user_has_disliked ? false : p.user_has_disliked,
               }
-              return p
-            }),
-          )
+            }
+            return p
+          })
+
+          setPosts(updatedPosts)
+
+          // If the modal is open and showing this post, update it there too
+          if (isModalOpen && selectedPost && selectedPost.id === post.id) {
+            const updatedSelectedPost = updatedPosts.find((p) => p.id === post.id)
+            if (updatedSelectedPost) {
+              setSelectedPost(updatedSelectedPost)
+            }
+          }
         }
       })
       .catch((error) => {
@@ -150,29 +175,50 @@ const ListPosts = () => {
         if (response.data && response.data.id) {
           const updatedPost = response.data
           setPosts(posts.map((p) => (p.id === updatedPost.id ? updatedPost : p)))
+
+          // If the modal is open and showing this post, update it there too
+          if (isModalOpen && selectedPost && selectedPost.id === updatedPost.id) {
+            setSelectedPost(updatedPost)
+          }
         }
         // If the API returns all posts as an array
         else if (Array.isArray(response.data)) {
           setPosts(response.data)
+
+          // If the modal is open, find and update the selected post
+          if (isModalOpen && selectedPost) {
+            const updatedSelectedPost = response.data.find((p) => p.id === selectedPost.id)
+            if (updatedSelectedPost) {
+              setSelectedPost(updatedSelectedPost)
+            }
+          }
         }
         // Fallback to manual update
         else {
-          setPosts(
-            posts.map((p) => {
-              if (p.id === post.id) {
-                const wasDisliked = p.user_has_disliked
-                return {
-                  ...p,
-                  dislike_count: wasDisliked ? p.dislike_count - 1 : p.dislike_count + 1,
-                  user_has_disliked: !wasDisliked,
-                  // If user is disliking and had previously liked, remove the like
-                  like_count: p.user_has_liked ? p.like_count - 1 : p.like_count,
-                  user_has_liked: p.user_has_liked ? false : p.user_has_liked,
-                }
+          const updatedPosts = posts.map((p) => {
+            if (p.id === post.id) {
+              const wasDisliked = p.user_has_disliked
+              return {
+                ...p,
+                dislike_count: wasDisliked ? p.dislike_count - 1 : p.dislike_count + 1,
+                user_has_disliked: !wasDisliked,
+                // If user is disliking and had previously liked, remove the like
+                like_count: p.user_has_liked ? p.like_count - 1 : p.like_count,
+                user_has_liked: p.user_has_liked ? false : p.user_has_liked,
               }
-              return p
-            }),
-          )
+            }
+            return p
+          })
+
+          setPosts(updatedPosts)
+
+          // If the modal is open and showing this post, update it there too
+          if (isModalOpen && selectedPost && selectedPost.id === post.id) {
+            const updatedSelectedPost = updatedPosts.find((p) => p.id === post.id)
+            if (updatedSelectedPost) {
+              setSelectedPost(updatedSelectedPost)
+            }
+          }
         }
       })
       .catch((error) => {
@@ -203,6 +249,34 @@ const ListPosts = () => {
     setCurrentPage(pageNumber)
     scrollToTop()
   }
+
+  const openPostModal = (post) => {
+    setSelectedPost(post)
+    setIsModalOpen(true)
+    // Prevent scrolling on the body when modal is open
+    document.body.style.overflow = "hidden"
+  }
+
+  const closePostModal = () => {
+    setIsModalOpen(false)
+    setSelectedPost(null)
+    // Re-enable scrolling on the body
+    document.body.style.overflow = "auto"
+  }
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.keyCode === 27) closePostModal()
+    }
+    window.addEventListener("keydown", handleEsc)
+
+    return () => {
+      window.removeEventListener("keydown", handleEsc)
+      // Make sure to re-enable scrolling when component unmounts
+      document.body.style.overflow = "auto"
+    }
+  }, [])
 
   // Add defensive code to ensure posts is always an array before calling slice
   const safeSlice = (array, start, end) => {
@@ -309,9 +383,9 @@ const ListPosts = () => {
                     </button>
                   </div>
 
-                  <a href={`/post/${post.id}`} className="read-more">
+                  <button onClick={() => openPostModal(post)} className="read-more">
                     Read More
-                  </a>
+                  </button>
                 </div>
               </article>
             ))}
@@ -358,6 +432,73 @@ const ListPosts = () => {
           {loading && posts.length > 0 && (
             <div className="loading-overlay">
               <div className="loading-spinner"></div>
+            </div>
+          )}
+
+          {/* Post Detail Modal */}
+          {isModalOpen && selectedPost && (
+            <div className="modal-overlay" onClick={closePostModal}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <button className="modal-close" onClick={closePostModal}>
+                  <X size={24} />
+                </button>
+
+                <article className="modal-post">
+                  <div className="modal-post-header">
+                    <h2 className="modal-post-title">{selectedPost.title}</h2>
+                    <div className="modal-post-meta">
+                      <div className="post-author">
+                        <User size={16} />
+                        <span>
+                          {selectedPost.author.first_name} {selectedPost.author.last_name}
+                        </span>
+                      </div>
+                      <div className="post-date">
+                        <Calendar size={16} />
+                        <span>{formatDate(selectedPost.created_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="modal-post-content">
+                    <p>{selectedPost.content}</p>
+                  </div>
+
+                  <div className="modal-post-footer">
+                    <div className="post-actions">
+                      <button
+                        className={`action-button like-button ${selectedPost.user_has_liked ? "active" : ""}`}
+                        onClick={() => handleLike(selectedPost)}
+                        disabled={!Token || actionLoading[`like-${selectedPost.id}`]}
+                        aria-label="Like"
+                        title={Token ? "Like this post" : "Log in to like posts"}
+                      >
+                        {actionLoading[`like-${selectedPost.id}`] ? (
+                          <span className="loading-spinner" aria-hidden="true"></span>
+                        ) : (
+                          <ThumbsUp size={18} aria-hidden="true" />
+                        )}
+                        <span>{selectedPost.like_count || 0}</span>
+                      </button>
+
+                      <button
+                        className={`action-button dislike-button ${selectedPost.user_has_disliked ? "active" : ""}`}
+                        onClick={() => handleDislike(selectedPost)}
+                        disabled={!Token || actionLoading[`dislike-${selectedPost.id}`]}
+                        aria-label="Dislike"
+                        title={Token ? "Dislike this post" : "Log in to dislike posts"}
+                      >
+                        {actionLoading[`dislike-${selectedPost.id}`] ? (
+                          <span className="loading-spinner" aria-hidden="true"></span>
+                        ) : (
+                          <ThumbsDown size={18} aria-hidden="true" />
+                        )}
+                        <span>{selectedPost.dislike_count || 0}</span>
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              </div>
             </div>
           )}
         </>
