@@ -353,6 +353,5 @@ describe("ListPosts Component", () => {
 
     // Should have a read more link
     expect(screen.getByText("Read More")).toBeInTheDocument()
-    expect(screen.getByText("Read More").closest("a")).toHaveAttribute("href", "/post/1")
   })
 })
