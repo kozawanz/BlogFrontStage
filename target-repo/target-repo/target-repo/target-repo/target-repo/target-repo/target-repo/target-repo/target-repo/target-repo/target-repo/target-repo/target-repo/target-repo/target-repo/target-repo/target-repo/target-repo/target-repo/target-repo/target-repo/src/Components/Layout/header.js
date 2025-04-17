@@ -19,7 +19,7 @@ const Header: React.FC = () => {
       <div className="header-container">
         <nav className="nav-left">
           <Link to="/" className="nav-link">Home</Link>
-          <Link to="/posts" className="nav-link">Posts</Link>
+          <Link to="/listposts" className="nav-link">Posts</Link>
         </nav>
         {token ? (
                  <>
