@@ -7,24 +7,30 @@ import "./ListPosts.css"
 import { ThumbsUp, ThumbsDown, Calendar, User, ChevronLeft, ChevronRight } from "lucide-react"
 
 const ListPosts = () => {
+  // Initialize posts as an empty array to prevent "slice is not a function" error
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [nextPage, setNextPage] = useState(null)
-  const [prevPage, setPrevPage] = useState(null)
   const [actionLoading, setActionLoading] = useState({})
   const Token = localStorage.getItem("Token")
 
- // eslint-disable-next-line
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [postsPerPage] = useState(5)
+  const [totalPosts, setTotalPosts] = useState(0)
+
+  // eslint-disable-next-line
   useEffect(() => {
+    // eslint-disable-next-line
     fetchPosts(BaseUrl + "/api/posts/")
      // eslint-disable-next-line
   }, [])
 
+  // eslint-disable-next-line
   const fetchPosts = (url) => {
     setLoading(true)
+    setError(null)
 
-    // Create config object with or without auth token based on login status
     const config = {
       method: "get",
       maxBodyLength: Number.POSITIVE_INFINITY,
@@ -34,7 +40,6 @@ const ListPosts = () => {
       },
     }
 
-    // Add authorization header if user is logged in
     if (Token) {
       config.headers.Authorization = "Token " + Token
     }
@@ -42,40 +47,33 @@ const ListPosts = () => {
     axios
       .request(config)
       .then((response) => {
-        console.log(JSON.stringify(response.data))
-        setPosts(response.data.results)
-        setNextPage(response.data.next)
-        setPrevPage(response.data.previous)
+        console.log("Posts data:", response.data)
+
+        // Ensure posts is always an array
+        const postsData = Array.isArray(response.data) ? response.data : []
+        setPosts(postsData)
+        setTotalPosts(postsData.length)
         setLoading(false)
       })
       .catch((error) => {
-        console.log(error)
-        setError(error.response?.data?.error || "An error occurred")
+        console.error("Error fetching posts:", error)
+        setError(error.response?.data?.error || "An error occurred while fetching posts")
         setLoading(false)
       })
   }
 
-  const handlePageChange = (url) => {
-    if (url) {
-      fetchPosts(url)
-      // Scroll to top when changing pages
-      window.scrollTo({ top: 0, behavior: "smooth" })
-    }
-  }
-
-  const handleLike = (postSlug, postId) => {
+  const handleLike = (post) => {
     if (!Token) {
       alert("Please log in to like posts")
       return
     }
 
-    // Set loading state for this specific action
-    setActionLoading((prev) => ({ ...prev, [`like-${postId}`]: true }))
+    setActionLoading((prev) => ({ ...prev, [`like-${post.id}`]: true }))
 
     const config = {
       method: "post",
       maxBodyLength: Number.POSITIVE_INFINITY,
-      url: BaseUrl + "/api/posts/" + postSlug + "/toggle_like/",
+      url: BaseUrl + "/api/posts/" + post.slug + "/toggle_like/",
       headers: {
         Authorization: "Token " + Token,
         "Content-Type": "application/json",
@@ -85,61 +83,58 @@ const ListPosts = () => {
     axios
       .request(config)
       .then((response) => {
-        console.log(JSON.stringify(response.data))
+        console.log("Like response:", response.data)
 
         // If the API returns a single updated post
-        if (response.data.id) {
+        if (response.data && response.data.id) {
           const updatedPost = response.data
-          setPosts(posts.map((post) => (post.id === updatedPost.id ? updatedPost : post)))
+          setPosts(posts.map((p) => (p.id === updatedPost.id ? updatedPost : p)))
         }
-        // If the API returns all posts
-        else if (response.data.results) {
-          setPosts(response.data.results)
+        // If the API returns all posts as an array
+        else if (Array.isArray(response.data)) {
+          setPosts(response.data)
         }
-        // Fallback to manual update if API doesn't return updated data
+        // Fallback to manual update
         else {
-          // Update the specific post that was liked
-          const updatedPosts = posts.map((post) => {
-            if (post.id === postId) {
-              // Toggle like status
-              const wasLiked = post.user_has_liked
-              return {
-                ...post,
-                like_count: wasLiked ? post.like_count - 1 : post.like_count + 1,
-                user_has_liked: !wasLiked,
-                // If user is liking and had previously disliked, remove the dislike
-                dislike_count: post.user_has_disliked ? post.dislike_count - 1 : post.dislike_count,
-                user_has_disliked: post.user_has_disliked ? false : post.user_has_disliked,
+          setPosts(
+            posts.map((p) => {
+              if (p.id === post.id) {
+                const wasLiked = p.user_has_liked
+                return {
+                  ...p,
+                  like_count: wasLiked ? p.like_count - 1 : p.like_count + 1,
+                  user_has_liked: !wasLiked,
+                  // If user is liking and had previously disliked, remove the dislike
+                  dislike_count: p.user_has_disliked ? p.dislike_count - 1 : p.dislike_count,
+                  user_has_disliked: p.user_has_disliked ? false : p.user_has_disliked,
+                }
               }
-            }
-            return post
-          })
-          setPosts(updatedPosts)
+              return p
+            }),
+          )
         }
       })
       .catch((error) => {
-        console.log(error)
-        alert(error.response?.data?.error || error.response?.data?.detail || "An error occurred")
+        console.error("Error liking post:", error)
+        alert(error.response?.data?.error || "An error occurred while liking the post")
       })
       .finally(() => {
-        // Clear loading state for this action
-        setActionLoading((prev) => ({ ...prev, [`like-${postId}`]: false }))
+        setActionLoading((prev) => ({ ...prev, [`like-${post.id}`]: false }))
       })
   }
 
-  const handleDislike = (postSlug, postId) => {
+  const handleDislike = (post) => {
     if (!Token) {
       alert("Please log in to dislike posts")
       return
     }
 
-    // Set loading state for this specific action
-    setActionLoading((prev) => ({ ...prev, [`dislike-${postId}`]: true }))
+    setActionLoading((prev) => ({ ...prev, [`dislike-${post.id}`]: true }))
 
     const config = {
       method: "post",
       maxBodyLength: Number.POSITIVE_INFINITY,
-      url: BaseUrl + "/api/posts/" + postSlug + "/toggle_dislike/",
+      url: BaseUrl + "/api/posts/" + post.slug + "/toggle_dislike/",
       headers: {
         Authorization: "Token " + Token,
         "Content-Type": "application/json",
@@ -149,45 +144,43 @@ const ListPosts = () => {
     axios
       .request(config)
       .then((response) => {
-        console.log(JSON.stringify(response.data))
+        console.log("Dislike response:", response.data)
 
         // If the API returns a single updated post
-        if (response.data.id) {
+        if (response.data && response.data.id) {
           const updatedPost = response.data
-          setPosts(posts.map((post) => (post.id === updatedPost.id ? updatedPost : post)))
+          setPosts(posts.map((p) => (p.id === updatedPost.id ? updatedPost : p)))
         }
-        // If the API returns all posts
-        else if (response.data.results) {
-          setPosts(response.data.results)
+        // If the API returns all posts as an array
+        else if (Array.isArray(response.data)) {
+          setPosts(response.data)
         }
-        // Fallback to manual update if API doesn't return updated data
+        // Fallback to manual update
         else {
-          // Update the specific post that was disliked
-          const updatedPosts = posts.map((post) => {
-            if (post.id === postId) {
-              // Toggle dislike status
-              const wasDisliked = post.user_has_disliked
-              return {
-                ...post,
-                dislike_count: wasDisliked ? post.dislike_count - 1 : post.dislike_count + 1,
-                user_has_disliked: !wasDisliked,
-                // If user is disliking and had previously liked, remove the like
-                like_count: post.user_has_liked ? post.like_count - 1 : post.like_count,
-                user_has_liked: post.user_has_liked ? false : post.user_has_liked,
+          setPosts(
+            posts.map((p) => {
+              if (p.id === post.id) {
+                const wasDisliked = p.user_has_disliked
+                return {
+                  ...p,
+                  dislike_count: wasDisliked ? p.dislike_count - 1 : p.dislike_count + 1,
+                  user_has_disliked: !wasDisliked,
+                  // If user is disliking and had previously liked, remove the like
+                  like_count: p.user_has_liked ? p.like_count - 1 : p.like_count,
+                  user_has_liked: p.user_has_liked ? false : p.user_has_liked,
+                }
               }
-            }
-            return post
-          })
-          setPosts(updatedPosts)
+              return p
+            }),
+          )
         }
       })
       .catch((error) => {
-        console.log(error)
-        alert(error.response?.data?.error || "An error occurred")
+        console.error("Error disliking post:", error)
+        alert(error.response?.data?.error || "An error occurred while disliking the post")
       })
       .finally(() => {
-        // Clear loading state for this action
-        setActionLoading((prev) => ({ ...prev, [`dislike-${postId}`]: false }))
+        setActionLoading((prev) => ({ ...prev, [`dislike-${post.id}`]: false }))
       })
   }
 
@@ -196,12 +189,56 @@ const ListPosts = () => {
     return new Date(dateString).toLocaleDateString(undefined, options)
   }
 
+  const truncateText = (text, maxLength = 200) => {
+    if (!text) return ""
+    if (text.length <= maxLength) return text
+    return text.slice(0, maxLength) + "..."
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber)
+    scrollToTop()
+  }
+
+  // Add defensive code to ensure posts is always an array before calling slice
+  const safeSlice = (array, start, end) => {
+    if (!Array.isArray(array)) return []
+    return array.slice(start, end)
+  }
+
+  // Calculate pagination values with defensive code
+  const indexOfLastPost = currentPage * postsPerPage
+  const indexOfFirstPost = indexOfLastPost - postsPerPage
+  const currentPosts = safeSlice(posts, indexOfFirstPost, indexOfLastPost)
+  const totalPages = Math.ceil((Array.isArray(posts) ? posts.length : 0) / postsPerPage)
+
   if (loading && posts.length === 0) {
-    return <div className="blog-container loading">Loading posts...</div>
+    return (
+      <div className="blog-container">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading posts...</p>
+        </div>
+      </div>
+    )
   }
 
   if (error) {
-    return <div className="blog-container error">Error: {error}</div>
+    return (
+      <div className="blog-container">
+        <div className="error-container">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <button className="retry-button" onClick={() => fetchPosts(BaseUrl + "/api/posts/")}>
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -211,12 +248,13 @@ const ListPosts = () => {
         <p className="blog-description">Explore the latest posts from our community</p>
       </header>
 
-      {posts.length === 0 ? (
+      {!Array.isArray(posts) || posts.length === 0 ? (
         <div className="no-posts">No posts available at the moment.</div>
       ) : (
         <>
+          <p>Total Posts: {totalPosts}</p>
           <div className="posts-grid">
-            {posts.map((post) => (
+            {currentPosts.map((post) => (
               <article key={post.id} className="post-card">
                 <div className="post-header">
                   <h2 className="post-title">{post.title}</h2>
@@ -235,38 +273,37 @@ const ListPosts = () => {
                 </div>
 
                 <div className="post-content">
-                  <p>
-                    {post.content ||
-                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."}
-                  </p>
+                  <p>{truncateText(post.content)}</p>
                 </div>
 
                 <div className="post-footer">
                   <div className="post-actions">
                     <button
                       className={`action-button like-button ${post.user_has_liked ? "active" : ""}`}
-                      onClick={() => handleLike(post.slug, post.id)}
+                      onClick={() => handleLike(post)}
                       disabled={!Token || actionLoading[`like-${post.id}`]}
+                      aria-label="Like"
                       title={Token ? "Like this post" : "Log in to like posts"}
                     >
                       {actionLoading[`like-${post.id}`] ? (
-                        <span className="loading-spinner"></span>
+                        <span className="loading-spinner" aria-hidden="true"></span>
                       ) : (
-                        <ThumbsUp size={18} />
+                        <ThumbsUp size={18} aria-hidden="true" />
                       )}
                       <span>{post.like_count || 0}</span>
                     </button>
 
                     <button
                       className={`action-button dislike-button ${post.user_has_disliked ? "active" : ""}`}
-                      onClick={() => handleDislike(post.slug, post.id)}
+                      onClick={() => handleDislike(post)}
                       disabled={!Token || actionLoading[`dislike-${post.id}`]}
+                      aria-label="Dislike"
                       title={Token ? "Dislike this post" : "Log in to dislike posts"}
                     >
                       {actionLoading[`dislike-${post.id}`] ? (
-                        <span className="loading-spinner"></span>
+                        <span className="loading-spinner" aria-hidden="true"></span>
                       ) : (
-                        <ThumbsDown size={18} />
+                        <ThumbsDown size={18} aria-hidden="true" />
                       )}
                       <span>{post.dislike_count || 0}</span>
                     </button>
@@ -280,28 +317,47 @@ const ListPosts = () => {
             ))}
           </div>
 
-          {/* Pagination controls at the bottom of the page */}
-          {(nextPage || prevPage) && (
+          {/* Client-side pagination controls */}
+          {totalPages > 1 && (
             <div className="pagination-container">
-              <div className="pagination-controls">
-                {prevPage ? (
-                  <button className="pagination-button prev" onClick={() => handlePageChange(prevPage)}>
-                    <ChevronLeft size={16} /> Previous Page
-                  </button>
-                ) : (
-                  <div className="pagination-spacer"></div>
-                )}
-
-                {loading && <div className="pagination-loading">Loading...</div>}
-
-                {nextPage ? (
-                  <button className="pagination-button next" onClick={() => handlePageChange(nextPage)}>
-                    Next Page <ChevronRight size={16} />
-                  </button>
-                ) : (
-                  <div className="pagination-spacer"></div>
-                )}
+              <div className="pagination-info">
+                Page {currentPage} of {totalPages}
               </div>
+              <div className="pagination-controls">
+                <button
+                  className="pagination-button prev"
+                  onClick={() => paginate(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={16} /> Previous
+                </button>
+
+                <div className="pagination-numbers">
+                  {[...Array(totalPages).keys()].map((number) => (
+                    <button
+                      key={number + 1}
+                      className={`pagination-number ${currentPage === number + 1 ? "active" : ""}`}
+                      onClick={() => paginate(number + 1)}
+                    >
+                      {number + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  className="pagination-button next"
+                  onClick={() => paginate(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {loading && posts.length > 0 && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
             </div>
           )}
         </>

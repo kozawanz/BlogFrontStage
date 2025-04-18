@@ -7,7 +7,7 @@ import "./CreatePost.css";
 const CreatePost = () => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
-    const [status, setStatus] = useState('');
+    const [status, setStatus] = useState('published');
     const [Err, setErr] = useState('');
 
     function handleStatusChange(event) {

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import { BaseUrl } from "../constants"
 import "./MyPosts.css"
-import { ThumbsUp, ThumbsDown, Calendar, User, ChevronLeft, ChevronRight, X, Edit } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Calendar, User, ChevronLeft, ChevronRight, X, Edit, Trash } from "lucide-react"
 
 const MyPosts = () => {
   // Initialize posts as an empty array to prevent "slice is not a function" error
@@ -22,6 +22,7 @@ const MyPosts = () => {
   // Modal state
   const [selectedPost, setSelectedPost] = useState(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
 
   // Edit form state
   const [editFormData, setEditFormData] = useState({
@@ -233,7 +234,6 @@ const MyPosts = () => {
     e.preventDefault()
     setActionLoading((prev) => ({ ...prev, update: true }))
 
-
     const config = {
       method: "patch",
       url: BaseUrl + "/api/posts/" + selectedPost.slug + "/",
@@ -267,7 +267,40 @@ const MyPosts = () => {
       })
   }
 
+  const handleDeletePost = () => {
+    setActionLoading((prev) => ({ ...prev, delete: true }))
 
+    const config = {
+      method: "delete",
+      url: BaseUrl + "/api/posts/" + selectedPost.slug + "/",
+      headers: {
+        Authorization: "Token " + Token,
+        "Content-Type": "application/json",
+      },
+    }
+
+    axios
+      .request(config)
+      .then((response) => {
+        console.log("Delete response:", response.data)
+
+        // Close the modal
+        closeAllModals()
+
+        // Refresh the posts list
+        fetchPosts()
+
+        // Show success message
+        alert("Post deleted successfully!")
+      })
+      .catch((error) => {
+        console.error("Error deleting post:", error)
+        alert(error.response?.data?.error || "An error occurred while deleting the post")
+      })
+      .finally(() => {
+        setActionLoading((prev) => ({ ...prev, delete: false }))
+      })
+  }
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "long", day: "numeric" }
@@ -300,9 +333,13 @@ const MyPosts = () => {
     document.body.style.overflow = "hidden"
   }
 
+  const openDeleteConfirm = () => {
+    setIsDeleteConfirmOpen(true)
+  }
 
   const closeAllModals = () => {
     setIsEditModalOpen(false)
+    setIsDeleteConfirmOpen(false)
     setSelectedPost(null)
     document.body.style.overflow = "auto"
   }
@@ -570,6 +607,24 @@ const MyPosts = () => {
                           "Update Post"
                         )}
                       </button>
+                      <button
+                        type="button"
+                        onClick={openDeleteConfirm}
+                        className="delete-button"
+                        disabled={actionLoading.delete}
+                      >
+                        {actionLoading.delete ? (
+                          <>
+                            <span className="loading-spinner" aria-hidden="true"></span>
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash size={16} />
+                            Delete Post
+                          </>
+                        )}
+                      </button>
                     </div>
                   </form>
                 </div>
@@ -577,6 +632,32 @@ const MyPosts = () => {
             </div>
           )}
 
+          {/* Delete Confirmation Modal */}
+          {isDeleteConfirmOpen && selectedPost && (
+            <div className="modal-overlay" onClick={(e) => e.stopPropagation()}>
+              <div className="confirm-modal">
+                <h3>Delete Post</h3>
+                <p>Are you sure you want to delete "{selectedPost.title}"?</p>
+                <p className="warning">This action cannot be undone.</p>
+
+                <div className="confirm-actions">
+                  <button onClick={closeAllModals} className="cancel-button" disabled={actionLoading.delete}>
+                    Cancel
+                  </button>
+                  <button onClick={handleDeletePost} className="confirm-delete-button" disabled={actionLoading.delete}>
+                    {actionLoading.delete ? (
+                      <>
+                        <span className="loading-spinner" aria-hidden="true"></span>
+                        Deleting...
+                      </>
+                    ) : (
+                      "Delete"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
