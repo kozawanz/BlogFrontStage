@@ -6,6 +6,7 @@ import { Layout } from "./Components/Layout/Layout";
 import Login from "./Components/Login";
 import CreatePost from "./Components/CreatePost";
 import ListPosts from "./Components/ListPosts";
+import MyPosts from "./Components/MyPosts";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route path="/login" element={<Login/>} />
             <Route path="/createpost" element={<CreatePost/>} />
             <Route path="/listposts" element={<ListPosts/>} />
+            <Route path="/myposts" element={<MyPosts/>} />
             </Routes>
          </Layout>
     </div>

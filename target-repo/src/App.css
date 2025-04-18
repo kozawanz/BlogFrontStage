@@ -83,7 +83,7 @@
 
   /* Form inputs */
   .form-group input {
-    width: 100%;
+    width: 90%;
     padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -125,7 +125,7 @@
 
   @media (max-width: 480px) {
     .register-card h1 {
-      font-size: 1.5rem;
+      font-size: 1rem;
     }
 
     .form-group input,

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import { BaseUrl } from "../constants"
 import "./MyPosts.css"
-import { ThumbsUp, ThumbsDown, Calendar, User, ChevronLeft, ChevronRight, X } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Calendar, User, ChevronLeft, ChevronRight, X, Edit } from "lucide-react"
 
 const MyPosts = () => {
   // Initialize posts as an empty array to prevent "slice is not a function" error
@@ -21,9 +21,14 @@ const MyPosts = () => {
 
   // Modal state
   const [selectedPost, setSelectedPost] = useState(null)
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
-
+  // Edit form state
+  const [editFormData, setEditFormData] = useState({
+    title: "",
+    content: "",
+    status: "published", // Add status field with default value
+  })
 
   // Check if user is logged in
   useEffect(() => {
@@ -32,13 +37,13 @@ const MyPosts = () => {
       setLoading(false)
       return
     }
-  // eslint-disable-next-line
+// eslint-disable-next-line
     fetchPosts()
-      // eslint-disable-next-line
+    // eslint-disable-next-line
   }, [Token])
+
   // eslint-disable-next-line
   const fetchPosts = () => {
-      // eslint-disable-next-line
     setLoading(true)
     setError(null)
 
@@ -94,7 +99,7 @@ const MyPosts = () => {
           setPosts(posts.map((p) => (p.id === updatedPost.id ? updatedPost : p)))
 
           // If the modal is open and showing this post, update it there too
-          if ((isViewModalOpen) && selectedPost && selectedPost.id === updatedPost.id) {
+          if (isEditModalOpen && selectedPost && selectedPost.id === updatedPost.id) {
             setSelectedPost(updatedPost)
           }
         }
@@ -103,7 +108,7 @@ const MyPosts = () => {
           setPosts(response.data)
 
           // If the modal is open, find and update the selected post
-          if ((isViewModalOpen) && selectedPost) {
+          if (isEditModalOpen && selectedPost) {
             const updatedSelectedPost = response.data.find((p) => p.id === selectedPost.id)
             if (updatedSelectedPost) {
               setSelectedPost(updatedSelectedPost)
@@ -130,7 +135,7 @@ const MyPosts = () => {
           setPosts(updatedPosts)
 
           // If the modal is open and showing this post, update it there too
-          if ((isViewModalOpen) && selectedPost && selectedPost.id === post.id) {
+          if (isEditModalOpen && selectedPost && selectedPost.id === post.id) {
             const updatedSelectedPost = updatedPosts.find((p) => p.id === post.id)
             if (updatedSelectedPost) {
               setSelectedPost(updatedSelectedPost)
@@ -171,7 +176,7 @@ const MyPosts = () => {
           setPosts(posts.map((p) => (p.id === updatedPost.id ? updatedPost : p)))
 
           // If the modal is open and showing this post, update it there too
-          if ((isViewModalOpen) && selectedPost && selectedPost.id === updatedPost.id) {
+          if (isEditModalOpen && selectedPost && selectedPost.id === updatedPost.id) {
             setSelectedPost(updatedPost)
           }
         }
@@ -180,7 +185,7 @@ const MyPosts = () => {
           setPosts(response.data)
 
           // If the modal is open, find and update the selected post
-          if ((isViewModalOpen) && selectedPost) {
+          if (isEditModalOpen && selectedPost) {
             const updatedSelectedPost = response.data.find((p) => p.id === selectedPost.id)
             if (updatedSelectedPost) {
               setSelectedPost(updatedSelectedPost)
@@ -207,7 +212,7 @@ const MyPosts = () => {
           setPosts(updatedPosts)
 
           // If the modal is open and showing this post, update it there too
-          if ((isViewModalOpen) && selectedPost && selectedPost.id === post.id) {
+          if (isEditModalOpen && selectedPost && selectedPost.id === post.id) {
             const updatedSelectedPost = updatedPosts.find((p) => p.id === post.id)
             if (updatedSelectedPost) {
               setSelectedPost(updatedSelectedPost)
@@ -223,6 +228,45 @@ const MyPosts = () => {
         setActionLoading((prev) => ({ ...prev, [`dislike-${post.id}`]: false }))
       })
   }
+
+  const handleUpdatePost = (e) => {
+    e.preventDefault()
+    setActionLoading((prev) => ({ ...prev, update: true }))
+
+
+    const config = {
+      method: "patch",
+      url: BaseUrl + "/api/posts/" + selectedPost.slug + "/",
+      headers: {
+        Authorization: "Token " + Token,
+        "Content-Type": "application/json",
+      },
+      data: editFormData,
+    }
+
+    axios
+      .request(config)
+      .then((response) => {
+        console.log("Update response:", response.data)
+
+        // Close the modal
+        closeAllModals()
+
+        // Refresh the posts list
+        fetchPosts()
+
+        // Show success message
+        alert("Post updated successfully!")
+      })
+      .catch((error) => {
+        console.error("Error updating post:", error)
+        alert(error.response?.data?.error || "An error occurred while updating the post")
+      })
+      .finally(() => {
+        setActionLoading((prev) => ({ ...prev, update: false }))
+      })
+  }
+
 
 
   const formatDate = (dateString) => {
@@ -245,20 +289,31 @@ const MyPosts = () => {
     scrollToTop()
   }
 
-  const openViewModal = (post) => {
+  const openEditModal = (post) => {
     setSelectedPost(post)
-    setIsViewModalOpen(true)
+    setEditFormData({
+      title: post.title,
+      content: post.content || "",
+      status: post.status || "published", // Set status from post or default to published
+    })
+    setIsEditModalOpen(true)
     document.body.style.overflow = "hidden"
   }
 
 
   const closeAllModals = () => {
-    setIsViewModalOpen(false)
+    setIsEditModalOpen(false)
     setSelectedPost(null)
     document.body.style.overflow = "auto"
   }
 
-
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
 
   // Handle ESC key to close modals
   useEffect(() => {
@@ -342,6 +397,7 @@ const MyPosts = () => {
                       <span>{formatDate(post.created_at)}</span>
                     </div>
                   </div>
+                  {post.status === "draft" && <div className="post-status draft">Draft</div>}
                 </div>
 
                 <div className="post-content">
@@ -382,8 +438,9 @@ const MyPosts = () => {
                   </div>
 
                   <div className="post-management">
-                    <button onClick={() => openViewModal(post)} className="view-button">
-                      View
+                    <button onClick={() => openEditModal(post)} className="edit-button">
+                      <Edit size={16} />
+                      Edit
                     </button>
                   </div>
                 </div>
@@ -435,73 +492,91 @@ const MyPosts = () => {
             </div>
           )}
 
-          {/* View Post Modal */}
-          {isViewModalOpen && selectedPost && (
+          {/* Edit Post Modal */}
+          {isEditModalOpen && selectedPost && (
             <div className="modal-overlay" onClick={closeAllModals}>
               <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <button className="modal-close" onClick={closeAllModals}>
                   <X size={24} />
                 </button>
 
-                <article className="modal-post">
-                  <div className="modal-post-header">
-                    <h2 className="modal-post-title">{selectedPost.title}</h2>
-                    <div className="modal-post-meta">
-                      <div className="post-author">
-                        <User size={16} />
-                        <span>
-                          {selectedPost.author.first_name} {selectedPost.author.last_name}
-                        </span>
-                      </div>
-                      <div className="post-date">
-                        <Calendar size={16} />
-                        <span>{formatDate(selectedPost.created_at)}</span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="modal-post">
+                  <h2 className="modal-post-title">Edit Post</h2>
 
-                  <div className="modal-post-content">
-                    <p>{selectedPost.content}</p>
-                  </div>
-
-                  <div className="modal-post-footer">
-                    <div className="post-actions">
-                      <button
-                        className={`action-button like-button ${selectedPost.user_has_liked ? "active" : ""}`}
-                        onClick={() => handleLike(selectedPost)}
-                        disabled={actionLoading[`like-${selectedPost.id}`]}
-                        aria-label="Like"
-                        title="Like this post"
-                      >
-                        {actionLoading[`like-${selectedPost.id}`] ? (
-                          <span className="loading-spinner" aria-hidden="true"></span>
-                        ) : (
-                          <ThumbsUp size={18} aria-hidden="true" />
-                        )}
-                        <span>{selectedPost.like_count || 0}</span>
-                      </button>
-
-                      <button
-                        className={`action-button dislike-button ${selectedPost.user_has_disliked ? "active" : ""}`}
-                        onClick={() => handleDislike(selectedPost)}
-                        disabled={actionLoading[`dislike-${selectedPost.id}`]}
-                        aria-label="Dislike"
-                        title="Dislike this post"
-                      >
-                        {actionLoading[`dislike-${selectedPost.id}`] ? (
-                          <span className="loading-spinner" aria-hidden="true"></span>
-                        ) : (
-                          <ThumbsDown size={18} aria-hidden="true" />
-                        )}
-                        <span>{selectedPost.dislike_count || 0}</span>
-                      </button>
+                  <form onSubmit={handleUpdatePost} className="edit-form">
+                    <div className="form-group">
+                      <label htmlFor="title">Title</label>
+                      <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        value={editFormData.title}
+                        onChange={handleInputChange}
+                        required
+                      />
                     </div>
 
-                  </div>
-                </article>
+                    <div className="form-group">
+                      <label htmlFor="content">Content</label>
+                      <textarea
+                        id="content"
+                        name="content"
+                        value={editFormData.content}
+                        onChange={handleInputChange}
+                        rows="10"
+                        required
+                      ></textarea>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Status</label>
+                      <div className="radio-group">
+                        <label className="radio-label">
+                          <input
+                            type="radio"
+                            name="status"
+                            value="published"
+                            checked={editFormData.status === "published"}
+                            onChange={handleInputChange}
+                          />
+                          Published
+                        </label>
+                        <label className="radio-label">
+                          <input
+                            type="radio"
+                            name="status"
+                            value="draft"
+                            checked={editFormData.status === "draft"}
+                            onChange={handleInputChange}
+                          />
+                          Draft
+                        </label>
+                      </div>
+                      <p className="status-help-text">
+                        {editFormData.status === "published"
+                          ? "Published posts are visible to all users."
+                          : "Draft posts are only visible to you."}
+                      </p>
+                    </div>
+
+                    <div className="form-actions">
+                      <button type="submit" className="update-button" disabled={actionLoading.update}>
+                        {actionLoading.update ? (
+                          <>
+                            <span className="loading-spinner" aria-hidden="true"></span>
+                            Updating...
+                          </>
+                        ) : (
+                          "Update Post"
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
           )}
+
         </>
       )}
     </div>
