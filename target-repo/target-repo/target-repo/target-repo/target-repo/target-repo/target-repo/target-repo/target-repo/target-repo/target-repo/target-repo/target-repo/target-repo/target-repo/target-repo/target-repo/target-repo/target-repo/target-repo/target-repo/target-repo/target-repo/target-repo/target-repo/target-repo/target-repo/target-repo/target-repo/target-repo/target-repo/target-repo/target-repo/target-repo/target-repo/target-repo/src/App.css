@@ -40,3 +40,97 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Container for the registration page */
+.form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1rem;
+    min-height: calc(100vh - 70px); /* Adjust based on your header height */
+    background-color: #f9f9f9;
+  }
+
+  /* Card styling with shadow and border radius */
+  .form-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    width: 100%;
+    max-width: 450px;
+  }
+
+  /* Form header */
+  .form-card h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #333;
+    font-size: 1.8rem;
+  }
+
+  /* Form group spacing */
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  /* Form labels */
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+  }
+
+  /* Form inputs */
+  .form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: #0066cc;
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+  }
+
+  /* Submit button */
+  .submit-btn {
+    width: 100%;
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 1rem;
+  }
+
+  .submit-btn:hover {
+    background-color: #0052a3;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .register-card {
+      padding: 1.5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .register-card h1 {
+      font-size: 1.5rem;
+    }
+
+    .form-group input,
+    .submit-btn {
+      padding: 0.6rem;
+    }
+  }
