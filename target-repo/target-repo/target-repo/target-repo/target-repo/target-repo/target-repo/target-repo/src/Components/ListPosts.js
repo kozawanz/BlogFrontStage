@@ -18,6 +18,10 @@ const ListPosts = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [postsPerPage] = useState(6)
   const [totalPosts, setTotalPosts] = useState(0)
+  // eslint-disable-next-line
+  const [nextPage, setNextPage] = useState(null)
+  // eslint-disable-next-line
+  const [prevPage, setPrevPage] = useState(null)
 
   // Modal state
   const [selectedPost, setSelectedPost] = useState(null)
@@ -54,9 +58,22 @@ const ListPosts = () => {
         console.log("Posts data:", response.data)
 
         // Ensure posts is always an array
-        const postsData = Array.isArray(response.data) ? response.data : []
-        setPosts(postsData)
-        setTotalPosts(postsData.length)
+        const postsData = Array.isArray(response.data)
+          ? response.data
+          : response.data.results
+            ? response.data.results
+            : []
+
+        // Filter for published posts only
+        const publishedPosts = postsData.filter((post) => post.status === "published" || !post.status)
+
+        setPosts(publishedPosts)
+
+        // If pagination data exists
+        if (response.data.next) setNextPage(response.data.next)
+        if (response.data.previous) setPrevPage(response.data.previous)
+
+        setTotalPosts(publishedPosts.length)
         setLoading(false)
       })
       .catch((error) => {

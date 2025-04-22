@@ -8,6 +8,11 @@ const mockAxios = {
   request: jest.fn(),
 }
 
+beforeAll(() => {
+  jest.spyOn(console, "error").mockImplementation(() => {});
+  jest.spyOn(console, "log").mockImplementation(() => {});
+});
+
 // Mock the entire axios module
 jest.mock("axios", () => ({
   __esModule: true,

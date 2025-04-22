@@ -34,13 +34,11 @@ function Login(props) {
 
         axios.request(config)
         .then((response) => {
-          console.log(JSON.stringify(response.data));
           localStorage.setItem("Token", response.data.token);
           setErr("Login Successful");
           window.location.href = "/";
         })
         .catch((error) => {
-          console.log(error.response.data.error);
           setErr(error.response.data.error);
         });
     }

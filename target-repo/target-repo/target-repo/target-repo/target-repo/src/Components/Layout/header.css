@@ -26,6 +26,7 @@
 .nav-right {
   display: flex;
   align-items: center;
+  margin-right: 6%;
 }
 
 .nav-link {
@@ -40,7 +41,7 @@
 }
 
 .btn {
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.6rem;
   border-radius: 4px;
   font-weight: 500;
   text-decoration: none;
@@ -56,3 +57,23 @@
 .btn-login:hover {
   background-color: #0052a3;
 }
+
+@media (max-width: 400px) {
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      font-size: smaller;
+    }
+      .btn {
+      padding: 0.3rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+  }

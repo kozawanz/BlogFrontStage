@@ -36,6 +36,7 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // eslint-disable-next-line
       const response = await axios.post(
         BaseUrl +'/api/register/',
         {
@@ -51,19 +52,17 @@ const Register: React.FC = () => {
           }
         }
       );
-      console.log(BaseUrl +'/api/register/');
-      console.log(response.data);
       setErr('✅ Registration successful!');
     } catch (error) {
 
     if (error.response) {
-      console.error('Error response:', error.response.data);
+
       setErr(`❌ Server error ${error.response.status}: ${JSON.stringify(error.response.data)}`);
     } else if (error.request) {
-      console.error('No response received:', error.request);
+
       setErr('❌ No response from server.');
     } else {
-      console.error('Unexpected error:', error.message);
+
       setErr(`❌ Unexpected error: ${error.message}`);
     }
     }

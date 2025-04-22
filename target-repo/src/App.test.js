@@ -9,6 +9,11 @@ jest.mock("./App", () => {
   return { __esModule: true, default: App }
 })
 
+beforeAll(() => {
+  jest.spyOn(console, "error").mockImplementation(() => {});
+  jest.spyOn(console, "log").mockImplementation(() => {});
+});
+
 test("renders mocked App component", () => {
   render(<App />)
   expect(screen.getByTestId("mock-app")).toBeInTheDocument()
