@@ -55,7 +55,7 @@ const ListPosts = () => {
     axios
       .request(config)
       .then((response) => {
-        console.log("Posts data:", response.data)
+
 
         // Ensure posts is always an array
         const postsData = Array.isArray(response.data)
@@ -77,7 +77,6 @@ const ListPosts = () => {
         setLoading(false)
       })
       .catch((error) => {
-        console.error("Error fetching posts:", error)
         setError(error.response?.data?.error || "An error occurred while fetching posts")
         setLoading(false)
       })
@@ -104,7 +103,6 @@ const ListPosts = () => {
     axios
       .request(config)
       .then((response) => {
-        console.log("Like response:", response.data)
 
         // If the API returns a single updated post
         if (response.data && response.data.id) {
@@ -157,7 +155,7 @@ const ListPosts = () => {
         }
       })
       .catch((error) => {
-        console.error("Error liking post:", error)
+
         alert(error.response?.data?.error || "An error occurred while liking the post")
       })
       .finally(() => {
@@ -186,7 +184,6 @@ const ListPosts = () => {
     axios
       .request(config)
       .then((response) => {
-        console.log("Dislike response:", response.data)
 
         // If the API returns a single updated post
         if (response.data && response.data.id) {
@@ -239,7 +236,6 @@ const ListPosts = () => {
         }
       })
       .catch((error) => {
-        console.error("Error disliking post:", error)
         alert(error.response?.data?.error || "An error occurred while disliking the post")
       })
       .finally(() => {

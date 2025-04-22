@@ -6,13 +6,17 @@ import { Register } from "./Components/Register"
 import Login from "./Components/Login"
 import { BaseUrl } from "./constants"
 import ListPosts from "./Components/ListPosts"
-import axios from "axios"
 
 // Mock axios manually instead of importing it
 const mockAxios = {
   post: jest.fn(),
   request: jest.fn(),
 }
+
+beforeAll(() => {
+  jest.spyOn(console, "error").mockImplementation(() => {});
+  jest.spyOn(console, "log").mockImplementation(() => {});
+});
 
 // Mock the axios module
 jest.mock("axios", () => ({
@@ -180,6 +184,7 @@ describe("Login Component", () => {
 
   let afterEach
 
+  // eslint-disable-next-line
   afterEach = () => {
     // Restore window.location
     window.location = originalLocation

@@ -35,13 +35,11 @@ const CreatePost = () => {
 
         axios.request(config)
             .then((response) => {
-                console.log(JSON.stringify(response.data));
                 setErr("✅ Post Created Successfully");
                 setTitle('');
                 setContent('');
             })
             .catch((error) => {
-                console.log(error);
                 setErr(error.response.data.error);
             });
     }
